@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智方云cubecloud</title>
+
+  <style>
+    :root {
+      --glass-bg:      rgba(255,255,255,.07);
+      --glass-border:  rgba(255,255,255,.22);
+      --glass-shadow:  0 18px 60px rgba(0,0,0,.32);
+      --tile-bg:       rgba(255,255,255,0.10);
+      --tile-hover:    rgba(255,255,255,0.18);
+      --tile-radius:   16px;
+      --text-on-glass: rgba(255,255,255,.92);
+      --muted-on-glass:rgba(255,255,255,.62);
+      --modal-bg:      #ffffff;
+      --modal-text:    #1a1a1a;
+      --accent-blue:   #2563eb;
+      --search-bg:     rgba(255,255,255,.10);
+      --search-border: rgba(255,255,255,.26);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @keyframes panelPop {
+      from { opacity: 0; transform: scale(.92) translateY(16px); }
+      to   { opacity: 1; transform: scale(1)  translateY(0);     }
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: transparent;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto,
+                   "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      overflow: hidden;
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+
+    /* ── Glass panel ── */
+    .panel {
+      width: 980px;
+      max-width: calc(100vw - 60px);
+      height: 560px;
+      max-height: calc(100vh - 60px);
+      background: rgba(18, 42, 100, 0.85);
+      border: 1px solid var(--glass-border);
+      border-radius: 26px;
+      box-shadow: var(--glass-shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 22px 24px 18px;
+      position: relative;
+      overflow: hidden;
+      -webkit-app-region: no-drag;
+      animation: panelPop .38s cubic-bezier(.34,1.56,.64,1) both;
+    }
+
+    /* ── Search bar ── */
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-wrap {
+      width: 84px;
+      height: 84px;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-wrap img {
+      width: 84px;
+      height: 84px;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    .search-box {
+      flex: 1;
+      height: 44px;
+      border-radius: 999px;
+      border: 1px solid var(--search-border);
+      background: var(--search-bg);
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text-on-glass);
+      font-size: 14px;
+      padding: 0 18px;
+    }
+
+    .search-box input::placeholder { color: var(--muted-on-glass); }
+
+    /* ── Icon grid ── */
+    .icon-grid {
+      margin-top: 26px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 22px 22px;
+      align-content: flex-start;
+      height: 428px;
+      overflow-y: auto;
+      padding-bottom: 160px;
+    }
+
+    .icon-grid::-webkit-scrollbar { display: none; }
+
+    /* ── App tile ── */
+    .icon-card {
+      width: 88px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-item {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--tile-radius);
+      background: var(--tile-bg);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 0 4px 14px rgba(0,0,0,.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform .15s ease, box-shadow .15s ease;
+      position: relative;
+    }
+
+    .icon-item:hover  { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,.34); }
+    .icon-item:active { transform: scale(.94); }
+
+    .tile-icon {
+      width: 46px;
+      height: 46px;
+      object-fit: contain;
+      pointer-events: none;
+      display: block;
+    }
+
+    .icon-name {
+      font-size: 11px;
+      color: var(--text-on-glass);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 88px;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* ── Add tile ── */
+    .add-tile .icon-item {
+      background: rgba(255,255,255,.08);
+      border: 2px dashed rgba(255,255,255,.28);
+      box-shadow: none;
+    }
+
+    .add-tile .icon-item:hover { background: rgba(255,255,255,.15); }
+
+    .add-tile .icon-name { color: rgba(255,255,255,.5); }
+
+    .add-icon-svg {
+      width: 28px;
+      height: 28px;
+      color: rgba(255,255,255,.65);
+    }
+
+    /* ── Empty tip ── */
+    .empty-tip {
+      width: 100%;
+      padding-top: 80px;
+      text-align: center;
+      color: rgba(255,255,255,.45);
+      font-size: 13px;
+    }
+
+    /* ── Status toast ── */
+    .status-tip {
+      position: absolute;
+      left: 50%;
+      bottom: 50px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.36);
+      color: rgba(255,255,255,.9);
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 12px;
+      backdrop-filter: blur(8px);
+      display: none;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* ── Minimize footer ── */
+    .footer-min {
+      position: absolute;
+      bottom: 10px;
+      left: 0; right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .footer-logo {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      border-radius: 24px;
+      opacity: .85;
+      pointer-events: none;
+    }
+
+    .btn-minimize {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,.55);
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 16px 5px;
+      border-radius: 8px;
+      transition: background .15s, color .15s;
+    }
+
+    .btn-minimize:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.9); }
+
+    /* ── Copyright ── */
+    .copyright {
+      position: absolute;
+      bottom: 7px;
+      right: 14px;
+      font-size: 9px;
+      color: rgba(255,255,255,.28);
+      letter-spacing: .4px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* ── Context popup ── */
+    .ctx-popup {
+      position: fixed;
+      background: rgba(22,24,36,.94);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 12px;
+      padding: 12px 14px 10px;
+      min-width: 168px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 10px 40px rgba(0,0,0,.5);
+      z-index: 200;
+      display: none;
+    }
+
+    .ctx-popup.visible { display: block; }
+
+    .ctx-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,.92);
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 190px;
+    }
+
+    .ctx-tag {
+      font-size: 11px;
+      color: rgba(255,255,255,.48);
+      margin-bottom: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 190px;
+      min-height: 4px;
+    }
+
+    .ctx-divider { height: 1px; background: rgba(255,255,255,.1); margin: 6px 0; }
+
+    .ctx-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 7px 8px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,.8);
+      font-size: 13px;
+      border-radius: 7px;
+      cursor: pointer;
+      text-align: left;
+      transition: background .12s;
+    }
+
+    .ctx-btn:hover { background: rgba(255,255,255,.1); }
+    .ctx-btn.danger { color: #f87171; }
+    .ctx-btn.danger:hover { background: rgba(248,113,113,.14); }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.48);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.visible { display: flex; }
+
+    .modal-card {
+      background: var(--modal-bg);
+      color: var(--modal-text);
+      border-radius: 16px;
+      padding: 28px 28px 22px;
+      width: 420px;
+      max-width: calc(100vw - 40px);
+      box-shadow: 0 24px 64px rgba(0,0,0,.4);
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--modal-text);
+      margin-bottom: 20px;
+    }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 38px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: 13px;
+      color: var(--modal-text);
+      background: #f9fafb;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .form-input:focus { border-color: var(--accent-blue); background: #fff; }
+
+    .form-row { display: flex; gap: 8px; }
+    .form-row .form-input { flex: 1; }
+
+    .btn-browse {
+      height: 38px;
+      padding: 0 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f3f4f6;
+      color: #374151;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+
+    .btn-browse:hover { background: #e5e7eb; }
+
+    .color-row { display: flex; align-items: center; gap: 10px; }
+
+    .color-picker-input {
+      width: 38px;
+      height: 38px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 2px;
+      cursor: pointer;
+      background: #f9fafb;
+    }
+
+    .color-preview-text { font-size: 13px; color: #6b7280; }
+
+    .icon-preview-wrap { display: flex; align-items: center; gap: 10px; }
+
+    .icon-preview-box {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      background: #1e3a8a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .icon-preview-box img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .btn-cancel {
+      height: 38px;
+      padding: 0 20px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      background: transparent;
+      color: #374151;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn-cancel:hover { background: #f3f4f6; }
+
+    .btn-done {
+      height: 38px;
+      padding: 0 22px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent-blue);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .btn-done:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Glass panel ── -->
+  <div class="panel">
+
+    <div class="search-wrap">
+      <div class="logo-wrap">
+        <img src="../../assets/cubecloud-logo-blue.png" alt="cubecloud" />
+      </div>
+      <div class="search-box">
+        <input id="searchInput" type="text" placeholder="搜索应用..." />
+      </div>
+    </div>
+
+    <div class="icon-grid" id="iconGrid"></div>
+
+    <div class="status-tip" id="statusTip"></div>
+
+    <div class="footer-min">
+      <img class="footer-logo" src="../../assets/cubecloud-logo-white.png" alt="cubecloud" />
+      <button class="btn-minimize" id="btnMinimize" type="button" title="最小化">___</button>
+    </div>
+
+    <span class="copyright">&copy; 智方云 cubecloud.io</span>
+
+  </div>
+
+  <!-- ── Right-click context popup ── -->
+  <div class="ctx-popup" id="ctxPopup">
+    <div class="ctx-title" id="ctxTitle"></div>
+    <div class="ctx-tag"   id="ctxTag"></div>
+    <div class="ctx-divider"></div>
+    <button class="ctx-btn danger" id="ctxDelete">🗑 删除</button>
+    <button class="ctx-btn"        id="ctxEdit"  >⚙ 修改</button>
+  </div>
+
+  <!-- ── Add / Edit modal ── -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-title" id="modalTitle">新增应用</div>
+
+      <div class="form-group">
+        <label class="form-label">应用名称</label>
+        <input class="form-input" id="fName" type="text" placeholder="例：VS Code" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">应用标签</label>
+        <input class="form-input" id="fTag" type="text" placeholder="例：代码编辑器" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">执行路径</label>
+        <div class="form-row">
+          <input class="form-input" id="fPath" type="text"
+                 placeholder="C:\path\to\app.exe  或  http://127.0.0.1:3000" />
+          <button class="btn-browse" id="btnBrowsePath">浏览...</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">背景颜色</label>
+        <div class="color-row">
+          <input class="color-picker-input" id="fColor" type="color" value="#1e3a8a" />
+          <span class="color-preview-text" id="colorHexText">#1e3a8a</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">图标上传</label>
+        <div class="icon-preview-wrap">
+          <div class="icon-preview-box" id="iconPreviewBox">
+            <img id="iconPreviewImg" src="" alt="" style="display:none" />
+          </div>
+          <button class="btn-browse" id="btnBrowseIcon">选择图片...</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btnCancel">取消</button>
+        <button class="btn-done"   id="btnDone"  >完成</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = window.electronAPI;
+
+    // ── State ──────────────────────────────────────────────────────────────────
+    let appList        = [];
+    let ctxIndex       = -1;   // index of right-clicked app
+    let editIndex      = -1;   // -1 = add mode, >= 0 = edit mode
+    let pendingIconSrc = '';   // full local path of chosen icon (before save)
+    let pendingIconRel = '';   // relative path after copy  (icons/filename)
+
+    // ── DOM refs ───────────────────────────────────────────────────────────────
+    const iconGrid       = document.getElementById('iconGrid');
+    const searchInput    = document.getElementById('searchInput');
+    const statusTip      = document.getElementById('statusTip');
+    const ctxPopup       = document.getElementById('ctxPopup');
+    const ctxTitle       = document.getElementById('ctxTitle');
+    const ctxTag         = document.getElementById('ctxTag');
+    const modalOverlay   = document.getElementById('modalOverlay');
+    const modalTitle     = document.getElementById('modalTitle');
+    const fName          = document.getElementById('fName');
+    const fTag           = document.getElementById('fTag');
+    const fPath          = document.getElementById('fPath');
+    const fColor         = document.getElementById('fColor');
+    const colorHexText   = document.getElementById('colorHexText');
+    const iconPreviewBox = document.getElementById('iconPreviewBox');
+    const iconPreviewImg = document.getElementById('iconPreviewImg');
+
+    // ── Status toast ───────────────────────────────────────────────────────────
+    let tipTimer = null;
+    function showStatus(msg) {
+      statusTip.textContent = msg;
+      statusTip.style.display = 'block';
+      clearTimeout(tipTimer);
+      tipTimer = setTimeout(() => { statusTip.style.display = 'none'; }, 2500);
+    }
+
+    // ── Icon URL resolution ────────────────────────────────────────────────────
+    async function resolveIconUrl(relativePath) {
+      if (!relativePath) return '';
+      if (/^https?:\/\/|^data:|^cubecloud:/.test(relativePath)) return relativePath;
+      return await API.getIconPath(relativePath);
+    }
+
+    // ── Render grid ────────────────────────────────────────────────────────────
+    async function renderGrid(list) {
+      iconGrid.innerHTML = '';
+
+      if (!list.length && !appList.length) {
+        const tip = document.createElement('div');
+        tip.className = 'empty-tip';
+        tip.textContent = '没有匹配到应用';
+        iconGrid.appendChild(tip);
+      }
+
+      for (let i = 0; i < list.length; i++) {
+        const appEntry = list[i];
+        const realIndex = appList.indexOf(appEntry);
+
+        const iconUrl = await resolveIconUrl(appEntry.icon);
+        const card = document.createElement('div');
+        card.className = 'icon-card';
+
+        const item = document.createElement('div');
+        item.className = 'icon-item';
+        // Only apply custom color if the user explicitly set one (not an old default)
+        const OLD_DEFAULTS = new Set(['#1a1a1a','#2a2a2a','#1e3a8a','#2d4fb8']);
+        const c = appEntry.color;
+        if (c && !OLD_DEFAULTS.has(c)) item.style.background = c;
+        item.title = appEntry.name || '';
+
+        item.addEventListener('click', () => launchApp(appEntry));
+        item.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openCtxPopup(e, realIndex);
+        });
+
+        const img = document.createElement('img');
+        img.className = 'tile-icon';
+        img.alt = appEntry.name || '';
+        img.src = iconUrl || '';
+        img.onerror = function () { this.style.display = 'none'; };
+
+        const label = document.createElement('div');
+        label.className = 'icon-name';
+        label.textContent = appEntry.name || '';
+
+        item.appendChild(img);
+        card.appendChild(item);
+        card.appendChild(label);
+        iconGrid.appendChild(card);
+      }
+
+      // "+ 新增应用" tile — always at the end, never filtered
+      const addCard = document.createElement('div');
+      addCard.className = 'icon-card add-tile';
+
+      const addItem = document.createElement('div');
+      addItem.className = 'icon-item';
+      addItem.title = '新增应用';
+      addItem.addEventListener('click', openAddModal);
+      addItem.innerHTML = `
+        <svg class="add-icon-svg" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>`;
+
+      const addLabel = document.createElement('div');
+      addLabel.className = 'icon-name';
+      addLabel.textContent = '新增应用';
+
+      addCard.appendChild(addItem);
+      addCard.appendChild(addLabel);
+      iconGrid.appendChild(addCard);
+    }
+
+    // ── Launch ─────────────────────────────────────────────────────────────────
+    async function launchApp(appEntry) {
+      try {
+        if (appEntry.type === 'url' || /^https?:\/\//i.test(appEntry.path)) {
+          const err = await API.openUrl(appEntry.path);
+          if (err) showStatus('打开失败：' + err);
+        } else {
+          const err = await API.openApp(appEntry.path);
+          if (err) showStatus('打开失败：' + err);
+        }
+      } catch (e) {
+        showStatus('启动失败：' + (e.message || e));
+      }
+    }
+
+    // ── Search ─────────────────────────────────────────────────────────────────
+    function filterAndRender(kw) {
+      const q = (kw || '').trim().toLowerCase();
+      const filtered = !q
+        ? appList
+        : appList.filter(a =>
+            (a.name || '').toLowerCase().includes(q) ||
+            (a.path || '').toLowerCase().includes(q) ||
+            (a.tag  || '').toLowerCase().includes(q)
+          );
+      renderGrid(filtered);
+    }
+
+    searchInput.addEventListener('input', function () {
+      filterAndRender(this.value);
+    });
+
+    // ── Context popup ──────────────────────────────────────────────────────────
+    function openCtxPopup(e, index) {
+      ctxIndex = index;
+      const a = appList[index];
+      ctxTitle.textContent = a.name || '';
+      ctxTag.textContent   = a.tag  || '';
+
+      // Keep popup inside the window
+      const px = Math.min(e.clientX, window.innerWidth  - 200);
+      const py = Math.min(e.clientY, window.innerHeight - 120);
+      ctxPopup.style.left = px + 'px';
+      ctxPopup.style.top  = py + 'px';
+      ctxPopup.classList.add('visible');
+    }
+
+    function closeCtxPopup() {
+      ctxPopup.classList.remove('visible');
+      ctxIndex = -1;
+    }
+
+    document.getElementById('ctxDelete').addEventListener('click', async () => {
+      if (ctxIndex < 0) return;
+      appList.splice(ctxIndex, 1);
+      await API.saveApps(appList);
+      closeCtxPopup();
+      filterAndRender(searchInput.value);
+    });
+
+    document.getElementById('ctxEdit').addEventListener('click', () => {
+      if (ctxIndex < 0) return;
+      openEditModal(ctxIndex);
+      closeCtxPopup();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!ctxPopup.contains(e.target)) closeCtxPopup();
+    });
+
+    // ── Modal helpers ──────────────────────────────────────────────────────────
+    function resetForm() {
+      fName.value  = '';
+      fTag.value   = '';
+      fPath.value  = '';
+      fColor.value = '#1e3a8a';
+      colorHexText.textContent = '#1e3a8a';
+      iconPreviewImg.src = '';
+      iconPreviewImg.style.display = 'none';
+      iconPreviewBox.style.background = '#1e3a8a';
+      pendingIconSrc = '';
+      pendingIconRel = '';
+    }
+
+    function openAddModal() {
+      editIndex = -1;
+      resetForm();
+      modalTitle.textContent = '新增应用';
+      modalOverlay.classList.add('visible');
+      setTimeout(() => fName.focus(), 50);
+    }
+
+    async function openEditModal(index) {
+      editIndex = index;
+      const a = appList[index];
+      resetForm();
+      modalTitle.textContent          = '修改应用';
+      fName.value                     = a.name  || '';
+      fTag.value                      = a.tag   || '';
+      fPath.value                     = a.path  || '';
+      fColor.value                    = a.color || '#1e3a8a';
+      colorHexText.textContent        = a.color || '#1e3a8a';
+      iconPreviewBox.style.background = a.color || '#1e3a8a';
+      pendingIconRel                  = a.icon  || '';
+
+      if (a.icon) {
+        const url = await resolveIconUrl(a.icon);
+        iconPreviewImg.src = url;
+        iconPreviewImg.style.display = 'block';
+      }
+
+      modalOverlay.classList.add('visible');
+      setTimeout(() => fName.focus(), 50);
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('visible');
+      editIndex = -1;
+      resetForm();
+    }
+
+    // ── Modal controls ─────────────────────────────────────────────────────────
+    fColor.addEventListener('input', () => {
+      colorHexText.textContent        = fColor.value;
+      iconPreviewBox.style.background = fColor.value;
+    });
+
+    document.getElementById('btnBrowsePath').addEventListener('click', async () => {
+      const p = await API.pickExe();
+      if (p) fPath.value = p;
+    });
+
+    document.getElementById('btnBrowseIcon').addEventListener('click', async () => {
+      const p = await API.pickIcon();
+      if (!p) return;
+      pendingIconSrc = p;
+      // Use IPC to get a safe data URL — file:// is blocked in the renderer
+      const dataUrl = await API.readIconPreview(p);
+      if (dataUrl) {
+        iconPreviewImg.src = dataUrl;
+        iconPreviewImg.style.display = 'block';
+      }
+    });
+
+    document.getElementById('btnCancel').addEventListener('click', closeModal);
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    document.getElementById('btnDone').addEventListener('click', async () => {
+      const name    = fName.value.trim();
+      const pathVal = fPath.value.trim();
+      if (!name)    { showStatus('请输入应用名称'); return; }
+      if (!pathVal) { showStatus('请输入执行路径'); return; }
+
+      let iconRel = pendingIconRel;
+      if (pendingIconSrc) {
+        iconRel = await API.copyIcon(pendingIconSrc);
+      }
+
+      const entry = {
+        name:  name,
+        tag:   fTag.value.trim(),
+        path:  pathVal,
+        icon:  iconRel || '',
+        type:  /^https?:\/\//i.test(pathVal) ? 'url' : 'file',
+        color: fColor.value || '#1e3a8a'
+      };
+
+      if (editIndex >= 0) {
+        appList[editIndex] = entry;
+      } else {
+        appList.push(entry);
+      }
+
+      await API.saveApps(appList);
+      closeModal();
+      filterAndRender(searchInput.value);
+    });
+
+    // ── Minimize ───────────────────────────────────────────────────────────────
+    document.getElementById('btnMinimize').addEventListener('click', () => {
+      API.minimizeWindow();
+    });
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+    async function init() {
+      appList = await API.getApps();
+      renderGrid(appList);
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{
+  "name": "cubecloud",
+  "productName": "智方云cubecloud",
+  "version": "1.0.0",
+  "description": "智方云cubecloud desktop app-access board",
+  "author": "智方云 cubecloud.io",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.0"
+  },
+  "build": {
+    "appId": "io.cubecloud.cubecloud",
+    "productName": "智方云cubecloud",
+    "copyright": "智方云cubecloud",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*",
+      "!assets/figma/**"
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/squadrats-blue.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "智方云cubecloud",
+      "runAfterFinish": true
+    }
+  }
+}
