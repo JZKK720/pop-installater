@@ -3,7 +3,7 @@
 Windows desktop app-launch board. One-click access to local EXE programs and localhost URLs, with a glassmorphism UI.
 
 ![Platform](https://img.shields.io/badge/platform-Windows%20x64-blue)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.2-blue)
 ![Electron](https://img.shields.io/badge/electron-34-47848F)
 ![License](https://img.shields.io/badge/license-Elastic%20License%202.0-orange)
 
@@ -22,10 +22,17 @@ Windows desktop app-launch board. One-click access to local EXE programs and loc
 
 ## Installation
 
+### Release options
+
+- Primary app delivery: Windows NSIS installer `.exe`
+- Parallel build and distribution option: Docker-based HTTP build service that generates and serves the same Windows installer
+
+Users still run **智方云cubecloud** through the Windows installer. The Docker option is for teams or operators who want a general build service for building, hosting, or downloading the installer through HTTP. Webhook-style triggering can be added on top of that service when desired, but it is not required.
+
 ### Download (recommended)
 
 1. Go to [Releases](../../releases/latest)
-2. Download `智方云cubecloud Setup 1.0.0.exe`
+2. Download `智方云cubecloud Setup 1.0.2.exe`
 3. Run the installer — choose install directory, click Install
 4. Launch from Start Menu or Desktop shortcut: **智方云cubecloud**
 
@@ -38,8 +45,8 @@ Windows desktop app-launch board. One-click access to local EXE programs and loc
 ### Setup
 
 ```bash
-git clone https://github.com/JZKK720/pop-installater.git
-cd pop-installater
+git clone https://github.com/JZKK720/pop-launcher.git
+cd pop-launcher
 npm install
 ```
 
@@ -53,8 +60,71 @@ npm start
 
 ```bash
 npm run build
-# Output: dist/智方云cubecloud Setup 1.0.0.exe
+# Output: dist/智方云cubecloud Setup 1.0.2.exe
 ```
+
+The native Windows packaging flow keeps using the repo-local `dist/` directory.
+
+### Run the HTTP build service locally
+
+```bash
+npm run start:build-service
+```
+
+Available endpoints:
+
+- `GET /healthz` returns service health and active build state
+- `GET /builds` lists recent build jobs
+- `POST /builds` starts a new build job
+- `GET /builds/:id` returns build status and artifact metadata
+- `GET /builds/:id/logs` returns the captured build log
+- `GET /builds/:id/artifact` downloads the finished installer for that job
+- `GET /artifacts/latest` downloads the latest successful installer
+
+Optional request body for `POST /builds`:
+
+```json
+{
+	"cleanDist": true,
+	"installDependencies": false,
+	"command": "npm run build:win"
+}
+```
+
+If `BUILD_TOKEN` is set, pass it through the `x-build-token` header or the `?token=` query string.
+
+### Run the Docker build service
+
+1. Copy `.env.example` to `.env` and set a real `BUILD_TOKEN` when you need remote access.
+2. Start the service:
+
+```bash
+npm run docker:build-service
+```
+
+3. Trigger a build:
+
+```bash
+curl -X POST http://127.0.0.1:3001/builds \
+	-H "Content-Type: application/json" \
+	-H "x-build-token: change-me" \
+	-d '{"cleanDist":true}'
+```
+
+4. Download the latest successful installer:
+
+```bash
+curl -L "http://127.0.0.1:3001/artifacts/latest?token=change-me" --output cubecloud-installer.exe
+```
+
+The container keeps generated installers in `artifacts/` and job metadata plus logs in `build-service-data/`.
+
+The Docker build service uses its own internal build output directory, `docker-dist/`, inside the container image, so it does not overwrite the native `dist/` output used by `npm run build`.
+
+This means version `1.0.2` can be offered with both choices live at the same time:
+
+- Direct installer download for regular Windows users
+- Docker build service for automated, team-managed, or optionally webhook-driven installer delivery
 
 ---
 
@@ -68,6 +138,13 @@ All user data is stored in `%AppData%\智方云cubecloud\`:
 | `icons/` | Uploaded icon images |
 
 Default apps and icons are seeded from the bundle on first launch.
+
+When you run the HTTP build service, it also creates repo-local working directories:
+
+| Path | Contents |
+|---|---|
+| `artifacts/` | Installers exported by the HTTP build service |
+| `build-service-data/` | Build job metadata and logs |
 
 ---
 

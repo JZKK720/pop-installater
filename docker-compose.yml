@@ -1,0 +1,20 @@
+services:
+  build-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cubecloud-build-service:1.0.2
+    ports:
+      - "${BUILD_SERVICE_PORT:-3001}:3001"
+    environment:
+      PORT: 3001
+      BUILD_SERVICE_PORT: 3001
+      BUILD_DIST_DIR: /workspace/docker-dist
+      BUILD_OUTPUT_DIR: /workspace/artifacts
+      BUILD_STATE_DIR: /workspace/build-service-data
+      BUILD_COMMAND: npm run build:win -- --config.directories.output=docker-dist
+      BUILD_TOKEN: ${BUILD_TOKEN:-}
+    volumes:
+      - ./artifacts:/workspace/artifacts
+      - ./build-service-data:/workspace/build-service-data
+    restart: unless-stopped

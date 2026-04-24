@@ -1,13 +1,17 @@
 {
   "name": "cubecloud",
   "productName": "智方云cubecloud",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "智方云cubecloud desktop app-access board",
   "author": "智方云 cubecloud.io",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win --x64"
+    "build": "npm run build:win",
+    "build:win": "electron-builder --win --x64",
+    "start:build-service": "node tools/build-agent/server.js",
+    "docker:build-service": "docker compose up --build build-service",
+    "docker:build-service:down": "docker compose down"
   },
   "devDependencies": {
     "electron": "^34.0.0",
@@ -29,7 +33,7 @@
     ],
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }],
-      "icon": "assets/squadrats-blue.png"
+      "icon": "assets/cubecloud-logo-blue.png"
     },
     "nsis": {
       "oneClick": false,
@@ -37,6 +41,8 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "智方云cubecloud",
+      "installerIcon": "assets/cubecloud-logo-blue.png",
+      "uninstallerIcon": "assets/cubecloud-logo-blue.png",
       "runAfterFinish": true
     }
   }

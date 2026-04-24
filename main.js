@@ -61,7 +61,7 @@ function createWindow() {
     resizable:   false,
     skipTaskbar: false,
     show:        false,
-    icon:        path.join(__dirname, 'assets', 'squadrats-blue.png'),
+    icon:        path.join(__dirname, 'assets', 'cubecloud-logo-blue.png'),
     webPreferences: {
       preload:          path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -83,7 +83,7 @@ function createWindow() {
 
 // ── Tray ──────────────────────────────────────────────────────────────────────
 function createTray() {
-  const iconPath = path.join(__dirname, 'assets', 'squadrats-blue.png');
+  const iconPath = path.join(__dirname, 'assets', 'cubecloud-logo-blue.png');
   const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
   tray = new Tray(icon);
   tray.setToolTip('智方云cubecloud');
