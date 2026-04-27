@@ -3,7 +3,7 @@
 Windows desktop app-launch board. One-click access to local EXE programs and localhost URLs, with a glassmorphism UI.
 
 ![Platform](https://img.shields.io/badge/platform-Windows%20x64-blue)
-![Version](https://img.shields.io/badge/version-1.0.2-blue)
+![Version](https://img.shields.io/badge/version-1.0.4-blue)
 ![Electron](https://img.shields.io/badge/electron-34-47848F)
 ![License](https://img.shields.io/badge/license-Elastic%20License%202.0-orange)
 
@@ -32,7 +32,7 @@ Users still run **智方云cubecloud** through the Windows installer. The Docker
 ### Download (recommended)
 
 1. Go to [Releases](../../releases/latest)
-2. Download `智方云cubecloud Setup 1.0.2.exe`
+2. Download `智方云cubecloud Setup 1.0.4.exe`
 3. Run the installer — choose install directory, click Install
 4. Launch from Start Menu or Desktop shortcut: **智方云cubecloud**
 
@@ -60,7 +60,7 @@ npm start
 
 ```bash
 npm run build
-# Output: dist/智方云cubecloud Setup 1.0.2.exe
+# Output: dist/智方云cubecloud Setup 1.0.4.exe
 ```
 
 The native Windows packaging flow keeps using the repo-local `dist/` directory.
@@ -121,7 +121,7 @@ The container keeps generated installers in `artifacts/` and job metadata plus l
 
 The Docker build service uses its own internal build output directory, `docker-dist/`, inside the container image, so it does not overwrite the native `dist/` output used by `npm run build`.
 
-This means version `1.0.2` can be offered with both choices live at the same time:
+This means version `1.0.4` can be offered with both choices live at the same time:
 
 - Direct installer download for regular Windows users
 - Docker build service for automated, team-managed, or optionally webhook-driven installer delivery
@@ -138,6 +138,7 @@ All user data is stored in `%AppData%\智方云cubecloud\`:
 | `icons/` | Uploaded icon images |
 
 Default apps and icons are seeded from the bundle on first launch.
+The NSIS installer also creates timestamped snapshots under `%AppData%\智方云cubecloud-backup\` before upgrade or uninstall so users keep rollback copies of `apps.json` and `icons/`.
 
 When you run the HTTP build service, it also creates repo-local working directories:
 
